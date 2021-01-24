@@ -15,7 +15,7 @@ import numpy as np
 import random as rnd
 
 # visualization
-import seaborn as sns
+#import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.dates as dates
 
@@ -217,7 +217,8 @@ feat06 = CHART.ret_rate_vs_mean(volume_mat ,10)
 data = np.concatenate([result, feat01, feat02, feat03, feat04, feat05, feat06], 1)
 df = pd.DataFrame(data=data)
 df.columns = ['result', 'feat01','feat02','feat03','feat04','feat05','feat06']
-df.to_csv("train_data/temp_train_data.csv")
+#df.to_csv("train_data/temp_train_data.csv")
+df.to_csv("../_feature_data/hogehoge.csv")
 hoge
 
 """
@@ -302,7 +303,8 @@ feat06 = CHART.ret_above_sma(10)
 data = np.concatenate([feat01, feat02, feat03, feat04, feat05, feat06], 1)
 df = pd.DataFrame(data=data)
 df.columns = ['feat01','feat02','feat03','feat04','feat05','feat06']
-df.to_csv("train_data/temp_train_data.csv")
+#df.to_csv("train_data/temp_train_data.csv")
+df.to_csv("../_feature_data/hogehoge.csv")
 hoge
 #"""
 

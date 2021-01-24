@@ -50,6 +50,8 @@ class Chart:
         self.volume_day_mat = []
         self.volume_rate_mat = []
 
+        self.chart_day_change_mat = []
+
     def set_data(self):
         self._set_day_mat()
         cash_mat = np.full((self.chart_day_mat.shape[0], 1), 100) #現金
@@ -79,6 +81,7 @@ class Chart:
         self.set_next_month_ex_return()
         #self.set_n_day_ex_return(20)
 
+
     def set_volume_data(self, volume_df):
         self.volume_day_mat = volume_df.values
         self.volume_day_mat = np.delete(self.volume_day_mat, 0, axis=1)
@@ -103,6 +106,9 @@ class Chart:
         #print(self.volume_day_mat.shape)
         #print(self.volume_day_mat)
         #hoge
+
+    def ret_RSI(self, volume_df):
+
 
     def _set_day_mat(self):
         self.chart_day_mat = np.delete(self.chart_day_mat, 0, axis=1)
@@ -424,6 +430,23 @@ class Chart:
         #print(volume_rate_mat)
         volume_rate_mat = volume_rate_mat.reshape(-1, 1)
         return volume_rate_mat
+
+    def ret_RSI(self, day_range):
+        chart_day_mat = np.delete(self.chart_day_mat,[0,1,2,3], 1) #SPY, cashなどを除く
+        volume_day_mat = np.delete(self.volume_day_mat,[0], 1) #SPYを除く
+        col = self.chart_day_mat.shape[0]
+        row = self.chart_day_mat.shape[1]
+        rsi_mat = np.full((chart_day_mat.shape), -999)
+        for i in range(day_range, col):
+            for j in range(row):
+                p_count = 0 #plus
+                m_count = 0 #minus
+                if chart_day_mat[i-day_range][j]!=0:
+                    for k in range(day_range):
+                        if
+
+
+
 
 
 
