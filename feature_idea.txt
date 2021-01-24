@@ -1,3 +1,30 @@
+◆タイムシリーズ分割について
+
+時間方向にA,B,Cで3分割
+ CV_1: train from A, validate from B
+ CV_2: train from B, validate from C
+ CV_3: train from A, validate from C
+時間方向にD,Eで2分割
+ CV_4: train from D, validate from E
+
+
+特定のテクニカル指標の全銘柄平均を特徴量とする。
+　どの特徴量平均が効くかはわからないが、
+　→特定の期間でvolatileが上昇するのを防げるかも
+
+上昇or減少 1 or -1 を学習させて（y_signとする)、
+さらにそれを特徴量として、別の特徴量と一緒に学習させる
+
+stableに強いモデル
+volatileに強いモデルを用意して、
+stable yes or no で両モデルの混合比を調整する。
+
+ある特徴量に対して、lag0~5を生成する。どれかが効くかも
+私の場合は月次予想なので、さいだい5ヶ月ラグ特徴量
+
+ある特徴量に対して、その絶対値特徴量
+
+
 *過去n日の超過リターン
 *過去n日の最高値からの下落率
 *過去n日の最高値の日から何日経過しているか

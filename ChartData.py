@@ -47,6 +47,8 @@ class Chart:
         #self.n_day_ex_return = []
 
         self.tnx_mat = []
+        self.volume_day_mat = []
+        self.volume_rate_mat = []
 
     def set_data(self):
         self._set_day_mat()
@@ -76,6 +78,31 @@ class Chart:
         #for ML
         self.set_next_month_ex_return()
         #self.set_n_day_ex_return(20)
+
+    def set_volume_data(self, volume_df):
+        self.volume_day_mat = volume_df.values
+        self.volume_day_mat = np.delete(self.volume_day_mat, 0, axis=1)
+        self.volume_day_mat = np.delete(self.volume_day_mat, 0, axis=0)
+        self.volume_day_mat = self.volume_day_mat.astype(np.float32)
+        #"""
+        for j in range(self.volume_day_mat.shape[1]):
+            first_data = -999
+            listed = 0 #上場
+            for i in range(self.volume_day_mat.shape[0]):
+                if listed==0 and self.volume_day_mat[i][j]!=0:
+                    listed = 1
+                    first_data = self.volume_day_mat[i][j]
+                    self.volume_day_mat[i][j] = 100
+                if listed==1:
+                    if self.volume_day_mat[i][j] != 0:
+                        self.volume_day_mat[i][j] = self.volume_day_mat[i][j]/first_data*100
+                    else:
+                        self.volume_day_mat[i][j] = self.volume_day_mat[i-1][j] #出来高0の場合は前日と同じ値
+        self.volume_rate_mat = np.full(self.volume_day_mat.shape, -999.0)
+        #"""
+        #print(self.volume_day_mat.shape)
+        #print(self.volume_day_mat)
+        #hoge
 
     def _set_day_mat(self):
         self.chart_day_mat = np.delete(self.chart_day_mat, 0, axis=1)
@@ -188,6 +215,26 @@ class Chart:
         n_day_ex_return = np.delete(n_day_ex_return, [0,1,2,3], 1) #SPY, cashなどを除く
         n_day_ex_return = n_day_ex_return.reshape(-1,1)
         return n_day_ex_return
+
+    # n日前からの超過リターン(n日前の値は平均化)
+    def ret_n_day_ex_mean_return(self, n):
+        n_day_ex_mean_return = np.full((self.chart_day_mat.shape), -999.0)
+        col = self.chart_day_mat.shape[0]
+        row = self.chart_day_mat.shape[1]
+        mean_range = 20
+        for i in range(n+mean_range, col):
+            for j in range(row):
+                if self.chart_day_mat[i-n-mean_range][j] != 0:
+                    n_day_ago_average = np.mean(self.chart_day_mat[i-n-mean_range:i-n+mean_range, j])
+                    #n_day_ago_average = (1/2) * ( self.chart_day_mat[i-n-mean_range, j]*(1/2)+self.chart_day_mat[i-n,j]+self.chart_day_mat[i-n+mean_range,j]*(1/2) )
+                    n_day_ex_mean_return[i][j] = (self.chart_day_mat[i][j]/n_day_ago_average)*100-100
+                    bench_mark = self.nasdaq_day_mat[i][0]/self.nasdaq_day_mat[i-n][0]*100-100 #SP500 return
+                    n_day_ex_mean_return[i][j] = n_day_ex_mean_return[i][j] - bench_mark
+                else:
+                    n_day_ex_mean_return[i][j] = -999.0 #欠損値は-999
+        n_day_ex_mean_return = np.delete(n_day_ex_mean_return, [0,1,2,3], 1) #SPY, cashなどを除く
+        n_day_ex_mean_return = n_day_ex_mean_return.reshape(-1,1)
+        return n_day_ex_mean_return
 
     #過去n日の高値からの下落率
     def ret_n_day_drop(self, n):
@@ -360,6 +407,24 @@ class Chart:
         sharpe_mat = np.delete(sharpe_mat, [0,1,2,3], 1) #SPY, cashなどを除く
         sharpe_mat = sharpe_mat.reshape(-1,1)
         return sharpe_mat
+
+
+    #過去day_range日の平均に対する、当日値の倍率
+    def ret_rate_vs_mean(self, input_mat, day_range):
+        volume_rate_mat = np.full(input_mat.shape, -999.0)
+        for j in range(input_mat.shape[1]):
+            listed = 0
+            ave = 0
+            for i in range(day_range, input_mat.shape[0]):
+                if listed==0 and input_mat[i][j]!=0:
+                    listed = 1
+                if listed==1 and input_mat[i-day_range][j]!=0:
+                    ave = np.mean(input_mat[i-day_range:i,j])
+                    volume_rate_mat[i][j] = input_mat[i][j]/ave
+        #print(volume_rate_mat)
+        volume_rate_mat = volume_rate_mat.reshape(-1, 1)
+        return volume_rate_mat
+
 
 
 

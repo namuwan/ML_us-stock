@@ -39,6 +39,7 @@ from sklearn.metrics import r2_score
 filename = 'data/stock_daily_data.csv' #日次
 nasdaq_filename = 'data/nasdaq_daily_data.csv'
 tnx_filename = 'data/us_yield_10years.csv'
+volume_filename = 'data/stock_daily_volume_data.csv' #日次出来高'
 
 np.set_printoptions(threshold=np.inf)
 np.set_printoptions(precision=2, suppress=True)
@@ -50,6 +51,8 @@ chart_df = pd.read_csv(filename)
 CHART = CD.Chart(chart_df)
 nasdaq_df = pd.read_csv(nasdaq_filename)
 CHART.set_nasdaq_data(nasdaq_df)
+volume_df = pd.read_csv(volume_filename)
+CHART.set_volume_data(volume_df)
 CHART.set_data()
 
 #金利データをセット
@@ -131,7 +134,35 @@ plt.plot(X, clf.predict(X))
 
 missing_list = []
 
-result = np.delete(CHART.next_month_ex_return, [0,1,2,3], 1) #SPY, cash などを除く
+result = np.delete(CHART.next_month_ex_return, [0,1,2,3], 1) #SPY, cash などを除外
+volume_mat = np.delete(CHART.volume_day_mat,[0], 1) #SPYを除く
+print("チャートデータ shape", end=' ')
+print(result.shape)
+print("出来高 shape", end=' ')
+print(volume_mat.shape)
+#print(volume_mat)
+#hoge
+
+
+"""
+mean_result = np.zeros((result.shape[0],1))
+for i in range(result.shape[0]):
+	temp_sum = 0
+	count = 0
+	for j in range(result.shape[1]):
+		if result[i][j]!=-999:
+			temp_sum = temp_sum + result[i][j]
+			count = count + 1
+	if count != 0:
+		mean_result[i][0] = temp_sum/count
+	else:
+		mean_result[i][0] = 0
+print(mean_result.shape)
+print(mean_result)
+plt.plot(mean_result)
+plt.show()
+"""
+
 result = result.reshape(-1,1)
 
 """
@@ -142,10 +173,15 @@ rank_value = rank_value.reshape(-1,1)
 
 """
 #n日前からの超過リターン
-feat01 = CHART.ret_n_day_ex_return(220)
-feat02 = CHART.ret_n_day_ex_return(180)
-feat03 = CHART.ret_n_day_ex_return(120)
-feat04 = CHART.ret_n_day_ex_return(60)
+#220, 180, 120, 60の場合は、前後20日の平均値に対するリターン
+#feat01 = CHART.ret_n_day_ex_return(220)
+feat01 = CHART.ret_n_day_ex_mean_return(220)
+#feat02 = CHART.ret_n_day_ex_return(180)
+feat02 = CHART.ret_n_day_ex_mean_return(180)
+#feat03 = CHART.ret_n_day_ex_return(120)
+feat03 = CHART.ret_n_day_ex_mea_return(120)
+#feat04 = CHART.ret_n_day_ex_return(60)
+feat04 = CHART.ret_n_day_ex_mean_return(60)
 feat05 = CHART.ret_n_day_ex_return(20)
 feat06 = CHART.ret_n_day_ex_return(10)
 data = np.concatenate([result, feat01, feat02, feat03, feat04, feat05, feat06], 1)
@@ -154,6 +190,35 @@ df.columns = ['result', 'feat01','feat02','feat03','feat04','feat05','feat06']
 df.to_csv("train_data/temp_train_data.csv")
 hoge
 """
+
+"""
+#n日前からの超過リターン #n日前の値は前後10日で平均化
+feat01 = CHART.ret_n_day_ex_mean_return(220)
+feat02 = CHART.ret_n_day_ex_mean_return(180)
+feat03 = CHART.ret_n_day_ex_mean_return(120)
+feat04 = CHART.ret_n_day_ex_mean_return(60)
+#feat05 = CHART.ret_n_day_ex_mean_return(20)
+#feat06 = CHART.ret_n_day_ex_mean_return(10)
+data = np.concatenate([result, feat01, feat02, feat03, feat04], 1)
+df = pd.DataFrame(data=data)
+#df.columns = ['result', 'feat01','feat02','feat03','feat04','feat05','feat06']
+df.columns = ['result', 'feat01','feat02','feat03','feat04']
+df.to_csv("train_data/temp_train_data.csv")
+hoge
+"""
+
+#出来高の増加具合
+feat01 = CHART.ret_rate_vs_mean(volume_mat ,220)
+feat02 = CHART.ret_rate_vs_mean(volume_mat ,180)
+feat03 = CHART.ret_rate_vs_mean(volume_mat ,120)
+feat04 = CHART.ret_rate_vs_mean(volume_mat ,60)
+feat05 = CHART.ret_rate_vs_mean(volume_mat ,20)
+feat06 = CHART.ret_rate_vs_mean(volume_mat ,10)
+data = np.concatenate([result, feat01, feat02, feat03, feat04, feat05, feat06], 1)
+df = pd.DataFrame(data=data)
+df.columns = ['result', 'feat01','feat02','feat03','feat04','feat05','feat06']
+df.to_csv("train_data/temp_train_data.csv")
+hoge
 
 """
 #過去n日の最大値からの下落率
@@ -185,7 +250,7 @@ df.to_csv("train_data/temp_train_data.csv")
 hoge
 """
 
-#"""
+"""
 #新高値圏からn日以内にいるか
 feat01 = CHART.ret_new_highs(60)
 feat02 = CHART.ret_new_highs(20)
@@ -194,7 +259,7 @@ df = pd.DataFrame(data=data)
 df.columns = ['result', 'feat01', 'feat02']
 df.to_csv("train_data/temp_train_data.csv")
 hoge
-#"""
+"""
 
 """
 #n日安値からの上昇率
@@ -226,7 +291,7 @@ df.to_csv("train_data/temp_train_data.csv")
 hoge
 """
 
-"""
+#"""
 #n日移動平均線の上か下か
 feat01 = CHART.ret_above_sma(220)
 feat02 = CHART.ret_above_sma(180)
@@ -239,7 +304,7 @@ df = pd.DataFrame(data=data)
 df.columns = ['feat01','feat02','feat03','feat04','feat05','feat06']
 df.to_csv("train_data/temp_train_data.csv")
 hoge
-"""
+#"""
 
 """
 #直近の動き

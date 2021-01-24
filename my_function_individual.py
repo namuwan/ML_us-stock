@@ -12,7 +12,45 @@ import matplotlib.dates as dates
 
 from statistics import stdev
 
+from sklearn.preprocessing import StandardScaler
+
 FILL_DEFICIT = 99999
+
+#欠損値(-999)がある行を削除
+def delete_deficit_col(a, deficit):
+	a = a[np.all(a != -999, axis=1), :]
+	"""
+	missing_list = []
+	there_is_deficit = 0
+	col = a.shape[0]
+	row = a.shape[1]
+	for i in range(col):
+	    for j in range(row):
+	        if a[i][j]==-999:
+	            there_is_deficit = 1
+	    if there_is_deficit==1:
+	        missing_list.append(i)
+	    there_is_deficit = 0
+	a = np.delete(a, missing_list, axis=0)
+	"""
+	return a
+
+def feature_standarization(a):
+	a_std = np.zeros((a.shape[0], 0))
+	sc = StandardScaler()
+	for j in range(a.shape[1]):
+	    if a[:,j].max()!=1 and a[:,j].min()!=0:#二値データでなかったら標準化を行う
+	        #print(X[:,j])
+	        #print(X[:,j].shape)
+	        #print(X[:,j].ndim)
+	        sc.fit(a[:,j].reshape(-1,1))
+	        a_j_std = sc.transform(a[:,j].reshape(-1,1))
+	    else:
+	        a_j_std = a[:,j].reshape(-1,1)
+	    a_std = np.concatenate([a_std, a_j_std], axis=1)
+	return a_std
+
+
 
 
 #pandasからnumpyに変換 月次チャート
